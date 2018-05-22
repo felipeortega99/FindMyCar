@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">FindMyCar</string>
+    <string name="title_activity_main">ActivityMain</string>
 </resources>
