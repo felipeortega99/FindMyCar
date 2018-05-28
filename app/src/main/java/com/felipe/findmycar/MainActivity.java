@@ -6,8 +6,15 @@ import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 
 public class MainActivity extends AppCompatActivity {
+    FloatingActionButton main_fab, fab_tracking, fab_gps;
+    Animation FabOpen, FabClose, FabRClockwise, FabRAnticlockwise;
+    Boolean isOpen = false;
+    Boolean isTrackingOn = false;
+    Boolean isGpsTrackingOn = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -16,12 +23,35 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
+        fab_tracking = (FloatingActionButton) findViewById(R.id.fab_tracking);
+        fab_gps = (FloatingActionButton) findViewById(R.id.fab_gps);
+        main_fab = (FloatingActionButton) findViewById(R.id.main_fab);
+        //Animations
+        FabOpen = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fab_open);
+        FabClose = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fab_close);
+        FabRClockwise = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.rotate_clockwise);
+        FabRAnticlockwise = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.rotate_anticlockwise);
+
+        main_fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                if (isOpen) {
+                    fab_gps.startAnimation(FabClose);
+                    fab_tracking.startAnimation(FabClose);
+                    main_fab.startAnimation(FabRClockwise);
+                    fab_gps.setClickable(false);
+                    fab_tracking.setClickable(false);
+                    isOpen = false;
+
+                } else {
+                    fab_gps.startAnimation(FabOpen);
+                    fab_tracking.startAnimation(FabOpen);
+                    main_fab.startAnimation(FabRAnticlockwise);
+                    main_fab.setImageResource(R.drawable.ic_action_close);
+                    fab_gps.setClickable(true);
+                    fab_tracking.setClickable(true);
+                    isOpen = true;
+                }
             }
         });
     }
