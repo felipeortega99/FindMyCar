@@ -1,13 +1,24 @@
 package com.felipe.findmycar;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.LatLng;
+
+import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
     FloatingActionButton main_fab, fab_tracking, fab_gps;
@@ -15,6 +26,7 @@ public class MainActivity extends AppCompatActivity {
     Boolean isOpen = false;
     Boolean isTrackingOn = false;
     Boolean isGpsTrackingOn = false;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,7 +65,13 @@ public class MainActivity extends AppCompatActivity {
                     isOpen = true;
                 }
             }
-        });
-    }
 
+
+
+
+        });
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
+
+        // mapFragment.
+    }
 }
