@@ -1,9 +1,15 @@
 package com.felipe.findmycar;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.ActivityCompat;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,35 +25,67 @@ import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-public class MapFragment extends Fragment implements OnMapReadyCallback {
+import java.util.ArrayList;
+
+import static android.content.Context.LOCATION_SERVICE;
+
+public class MapFragment extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
+    LocationManager locationManager;
+
+    ArrayList<LatLng> posicion;
+
     MapView mMapView;
     View mView;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-    }
 
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        mView = inflater.inflate(R.layout.map_fragment, container, false);
-        return  mView;
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
 
-    }
+        mapFragment.getMapAsync(this);
 
-    @Override
-    public void onViewCreated(View view, Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-        mMapView = (MapView) mView.findViewById(R.id.map);
-        if(mMapView !=null){
-            mMapView.onCreate(null);
-            mMapView.onResume();
-            mMapView.getMapAsync(this);
+        locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED){
+           return;
         }
+
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 2000,2,
+                new LocationListener() {
+                    @Override
+                    public void onLocationChanged(Location location) {
+                        double latitud =location.getLatitude();
+                        double longitud =location.getLongitude();
+                        LatLng ubicacion = new LatLng(latitud,longitud);
+                        posicion.add(ubicacion);
+                        //mMap.clear();
+                        mMap.addMarker(new MarkerOptions().position(ubicacion));
+                        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(ubicacion, 16));
+                        System.out.println(posicion.toArray());
+                    }
+
+                    @Override
+                    public void onStatusChanged(String s, int i, Bundle bundle) {
+
+                    }
+
+                    @Override
+                    public void onProviderEnabled(String s) {
+
+                    }
+
+                    @Override
+                    public void onProviderDisabled(String s) {
+
+                    }
+                });
+
     }
+
 
     /**
      * Manipulates the map once available.
@@ -60,12 +98,14 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
      */
     @Override
     public void onMapReady(GoogleMap googleMap) {
-        MapsInitializer.initialize(getContext());
+       // MapsInitializer.initialize(getContext());
         mMap = googleMap;
+        LatLng latLng = new LatLng(31.875771,-116.653637);
 
         // Add a marker in Sydney and move the camera
-        LatLng sydney = new LatLng(-34, 151);
+        /*LatLng sydney = new LatLng(-34, 151);
         mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
         mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+        */
     }
 }
