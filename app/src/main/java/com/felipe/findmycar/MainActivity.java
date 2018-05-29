@@ -21,7 +21,7 @@ import com.google.android.gms.maps.model.LatLng;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
-    FloatingActionButton main_fab, fab_tracking, fab_gps;
+    FloatingActionButton main_fab, fab_tracking, fab_gps, fab_return_tracking;
     Animation FabOpen, FabClose, FabRClockwise, FabRAnticlockwise;
     Boolean isOpen = false;
     Boolean isTrackingOn = false;
@@ -35,6 +35,8 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+
+        fab_return_tracking = (FloatingActionButton) findViewById(R.id.fab_return);
         fab_tracking = (FloatingActionButton) findViewById(R.id.fab_tracking);
         fab_gps = (FloatingActionButton) findViewById(R.id.fab_gps);
         main_fab = (FloatingActionButton) findViewById(R.id.main_fab);
@@ -51,6 +53,7 @@ public class MainActivity extends AppCompatActivity {
                     fab_gps.startAnimation(FabClose);
                     fab_tracking.startAnimation(FabClose);
                     main_fab.startAnimation(FabRClockwise);
+                    main_fab.setImageResource(R.drawable.ic_action_arrow_drop_up);
                     fab_gps.setClickable(false);
                     fab_tracking.setClickable(false);
                     isOpen = false;
@@ -67,9 +70,26 @@ public class MainActivity extends AppCompatActivity {
             }
 
 
-
-
         });
+
+        fab_tracking.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                fab_return_tracking.setImageResource(R.drawable.ic_action_return_tracking);
+                main_fab.setEnabled(false);
+                fab_return_tracking.setClickable(true);
+            }
+        });
+
+        fab_gps.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                fab_return_tracking.setImageResource(R.drawable.ic_action_return_tracking_gps);
+                main_fab.setEnabled(false);
+                fab_return_tracking.setClickable(true);
+            }
+        });
+
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
 
         // mapFragment.

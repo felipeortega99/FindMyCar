@@ -50,7 +50,6 @@
         app:pressedTranslationZ="12dp"
         android:visibility="invisible"/>
 
-
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/main_fab"
         android:layout_width="wrap_content"
@@ -61,5 +60,17 @@
         app:srcCompat="@drawable/ic_action_arrow_drop_up"
         android:elevation="6dp"
         app:pressedTranslationZ="12dp"/>
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/fab_return"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_marginRight="65dp"
+        android:layout_marginBottom="16dp"
+        app:srcCompat="@drawable/ic_action_return_tracking"
+        android:elevation="6dp"
+        app:pressedTranslationZ="12dp"
+        android:visibility="invisible"/>
 
 </android.support.design.widget.CoordinatorLayout>
