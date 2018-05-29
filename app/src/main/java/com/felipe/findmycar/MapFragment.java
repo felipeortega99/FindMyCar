@@ -54,7 +54,7 @@ public class MapFragment extends FragmentActivity implements OnMapReadyCallback 
            return;
         }
 
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 2000,2,
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0,0,
                 new LocationListener() {
                     @Override
                     public void onLocationChanged(Location location) {
@@ -101,6 +101,7 @@ public class MapFragment extends FragmentActivity implements OnMapReadyCallback 
        // MapsInitializer.initialize(getContext());
         mMap = googleMap;
         LatLng latLng = new LatLng(31.875771,-116.653637);
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
 
         // Add a marker in Sydney and move the camera
         /*LatLng sydney = new LatLng(-34, 151);
