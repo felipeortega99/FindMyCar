@@ -38,7 +38,7 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-
+        //Fab buttons
         fab_return_tracking = (FloatingActionButton) findViewById(R.id.fab_return);
         fab_tracking = (FloatingActionButton) findViewById(R.id.fab_tracking);
         fab_gps = (FloatingActionButton) findViewById(R.id.fab_gps);
@@ -80,6 +80,7 @@ public class MainActivity extends AppCompatActivity {
             openFabButton();
         }
     }
+
     public void onReturnTrackingClick(View view){
         main_fab.setBackgroundColor(Color.parseColor("#DC552C"));
         main_fab.setEnabled(true);
