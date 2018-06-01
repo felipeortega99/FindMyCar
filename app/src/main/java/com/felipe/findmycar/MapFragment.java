@@ -29,7 +29,7 @@ import java.util.ArrayList;
 
 import static android.content.Context.LOCATION_SERVICE;
 
-public class MapFragment extends FragmentActivity implements OnMapReadyCallback {
+public class MapFragment extends Fragment implements OnMapReadyCallback {
 
     private GoogleMap mMap;
     LocationManager locationManager;
@@ -43,16 +43,18 @@ public class MapFragment extends FragmentActivity implements OnMapReadyCallback 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
 
-        mapFragment.getMapAsync(this);
+        //SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
 
-        locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+        //mapFragment.getMapAsync(this);
 
+        //locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+/*
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
                 ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED){
            return;
         }
+
 
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0,0,
                 new LocationListener() {
@@ -83,9 +85,27 @@ public class MapFragment extends FragmentActivity implements OnMapReadyCallback 
 
                     }
                 });
+                */
 
     }
 
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        mView = inflater.inflate(R.layout.map_fragment,container,false);
+        return  mView;
+    }
+
+    @Override
+    public void onViewCreated(View view, Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        mMapView = (MapView) mView.findViewById(R.id.map);
+        if (mMapView != null){
+            mMapView.onCreate(null);
+            mMapView.onResume();
+            mMapView.getMapAsync(this);
+        }
+    }
 
     /**
      * Manipulates the map once available.
@@ -98,7 +118,7 @@ public class MapFragment extends FragmentActivity implements OnMapReadyCallback 
      */
     @Override
     public void onMapReady(GoogleMap googleMap) {
-       // MapsInitializer.initialize(getContext());
+        MapsInitializer.initialize(getContext());
         mMap = googleMap;
         LatLng latLng = new LatLng(31.875771,-116.653637);
         mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
@@ -108,5 +128,7 @@ public class MapFragment extends FragmentActivity implements OnMapReadyCallback 
         mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
         mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
         */
+
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
     }
 }
