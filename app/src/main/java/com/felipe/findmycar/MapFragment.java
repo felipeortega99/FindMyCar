@@ -44,6 +44,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         super.onCreate(savedInstanceState);
 
 
+
         //SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
 
         //mapFragment.getMapAsync(this);
@@ -91,7 +92,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        mView = inflater.inflate(R.layout.map_fragment,container,false);
+       // mView = inflater.inflate(R.layout.map_fragment,container,false);
         return  mView;
     }
 
