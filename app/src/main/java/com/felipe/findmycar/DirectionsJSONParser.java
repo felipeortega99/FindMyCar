@@ -62,8 +62,6 @@ public class DirectionsJSONParser {
         HashMap<String, String> googleDirectionsMap = new HashMap<String, String>();
         JSONArray jDuration = null;
 
-        Log.d("json response",jObject.toString());
-
         try{
             jDuration = jObject.getJSONArray("routes");
 
