@@ -61,7 +61,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public Boolean isGps = false;
     public Boolean isTracking = false;
     public Boolean isFirstTime = true;
-    public Boolean isFirstTimeGPS, isntStop;
+    public Boolean isGPSTrackingDone=false;
+    public Boolean isTrackingDone=false;
+    public Boolean isFirstTimeGPS, isntStop, counter;
     //TTS
     public TextToSpeech tts;
     public Switch switch_item;
@@ -187,6 +189,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         fab_return_tracking.setVisibility(View.VISIBLE);
         isGps = true;
         isFirstTimeGPS = true;
+        counter = true;
     }
 
     public void onMainFabButtonClick(View view) {
@@ -211,22 +214,27 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             fab_return_tracking.setImageResource(R.drawable.ic_action_return_tracking);
             cardView.setVisibility(View.VISIBLE);
             isGps = false;
+            isGPSTrackingDone = true;
 
         } else if (isTracking) { //If tracking is clicked
             fab_return_tracking.setImageResource(R.drawable.ic_action_return_tracking);
             isTracking = false;
             isntStop = false;
+            isTrackingDone = true;
+
         } else {
             main_fab.setEnabled(true);
             mGoogleMap.clear();
             cardView.setVisibility(View.INVISIBLE);
             fab_return_tracking.setVisibility(View.INVISIBLE);
             onMapReady(mGoogleMap);
+            isTrackingDone = false;
+            isGPSTrackingDone = false;
         }
     }
 
     public void drawPolyline() {
-        if(isFirstTime) {
+        if (isFirstTime) {
             lineOptions = new PolylineOptions();
             lineOptions.addAll(polylinePoints);
             lineOptions.width(10);
@@ -235,7 +243,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             if (lineOptions != null) {
                 polylineTracker = mGoogleMap.addPolyline(lineOptions);
             }
-        }else{
+        } else {
             polylineTracker.setPoints(polylinePoints);
             LatLng origin = new LatLng(latitude, longitude);
             lineOptions.add(origin);
@@ -258,13 +266,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             if (isTracking) {
                 isFirstTime = false;
-            }else if(isGps){
+            } else if (isGps) {
                 isFirstTimeGPS = false;
             }
         } else {
             LatLng position = new LatLng(latitude, longitude);
             mCurrLocationMarker.setPosition(position);
-            mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(position,19));
+            mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(position, 19));
         }
     }
 
@@ -441,7 +449,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 lineOptions.color(Color.rgb(220, 85, 44));
             }
             if (lineOptions != null) {
-                mGoogleMap.addPolyline(lineOptions);
+                    mGoogleMap.addPolyline(lineOptions);
             }
         }
     }
@@ -497,10 +505,18 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             } else {
                 isFirstTime = true;
             }
-        } else if (isTracking) {
-            if(isntStop) {
+        }else if(isGPSTrackingDone){
+            addMarker();
+        }
+        if (isTracking) {
+
+            if (isntStop) {
                 drawPolyline();
+            } else {
+                addMarker();
             }
+        }else if(isTrackingDone) {
+            addMarker();
         }
     }
 
