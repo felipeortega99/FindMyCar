@@ -34,7 +34,9 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 
 import org.json.JSONObject;
@@ -70,6 +72,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private String duration, distance;
     public MarkerOptions marcadorDestino, marcadorOrigen;
     public PolylineOptions lineOptions;
+    public Marker mCurrLocationMarker = null;
+    public Polyline polylineTracker = null;
     //GPS
     protected Context context;
     protected LocationManager locationManager;
@@ -148,7 +152,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mGoogleMap = googleMap;
         //LatLng myLocation = new LatLng(latitude, longitude);
         LatLng myLocation = new LatLng(location.getLatitude(), location.getLongitude());
-
+        polylinePoints.add(myLocation);
         marcadorDestino = new MarkerOptions();
         marcadorDestino.position(myLocation);
         marcadorDestino.title("Aquì estoy estacionado");
@@ -229,11 +233,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             lineOptions.color(Color.rgb(220, 85, 44));
 
             if (lineOptions != null) {
-                mGoogleMap.addPolyline(lineOptions);
+                polylineTracker = mGoogleMap.addPolyline(lineOptions);
             }
         }else{
+            polylineTracker.setPoints(polylinePoints);
             LatLng origin = new LatLng(latitude, longitude);
             lineOptions.add(origin);
+            mGoogleMap.addPolyline(lineOptions);
         }
 
         addMarker();
@@ -247,7 +253,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             marcadorOrigen.position(origen);
             marcadorOrigen.title("Aquì estoy");
             marcadorOrigen.icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_action_person_marker));
-            mGoogleMap.addMarker(marcadorOrigen);
+            mCurrLocationMarker = mGoogleMap.addMarker(marcadorOrigen);
             mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(origen, 19));
 
             if (isTracking) {
@@ -257,7 +263,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         } else {
             LatLng position = new LatLng(latitude, longitude);
-            marcadorOrigen.position(position);
+            mCurrLocationMarker.setPosition(position);
             mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(position,19));
         }
     }
