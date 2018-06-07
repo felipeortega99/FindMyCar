@@ -12,11 +12,10 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
+import android.support.v7.widget.SwitchCompat;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
@@ -25,6 +24,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.widget.CompoundButton;
+import android.widget.Switch;
 import android.widget.TextView;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -39,7 +40,6 @@ import com.google.android.gms.maps.model.PolylineOptions;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
-import java.io.Console;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -48,6 +48,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, LocationListener {
     public FloatingActionButton main_fab, fab_tracking, fab_gps, fab_return_tracking;
@@ -57,12 +58,18 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public Boolean isOpen = false;
     public Boolean isGps = false;
     public Boolean isTracking = false;
+    public Boolean isFirstTime = true;
+    public Boolean isFirstTimeGPS, isntStop;
+    //TTS
     public TextToSpeech tts;
+    public Switch switch_item;
     //Maps
     private GoogleMap mGoogleMap;
     private double latitude;
     private double longitude;
+    private String duration, distance;
     public MarkerOptions marcadorDestino, marcadorOrigen;
+    public PolylineOptions lineOptions;
     //GPS
     protected Context context;
     protected LocationManager locationManager;
@@ -72,6 +79,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private static final float MIN_DISTANCE_CHANGE_FOR_UPDATES = 1; //meters
     // The minimum time between updates
     private static final long MIN_TIME_BW_UPDATES = 1000 * 5; // milliseconds
+
+    public List<LatLng> polylinePoints = new ArrayList<LatLng>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -121,8 +130,34 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         // mapFragment.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
+        //TTS
+        tts = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
+            @Override
+            public void onInit(int status) {
+                if (status != TextToSpeech.ERROR) {
+                    Locale locSpanish = new Locale("spa", "MEX");
+                    tts.setLanguage(locSpanish);
+                }
+            }
+        });
     }
 
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+        mGoogleMap = googleMap;
+        //LatLng myLocation = new LatLng(latitude, longitude);
+        LatLng myLocation = new LatLng(location.getLatitude(), location.getLongitude());
+
+        marcadorDestino = new MarkerOptions();
+        marcadorDestino.position(myLocation);
+        marcadorDestino.title("Aquì estoy estacionado");
+        marcadorDestino.icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_action_car_marker));
+        mGoogleMap.addMarker(marcadorDestino);
+        mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(myLocation, 19));
+    }
+
+    //If tracking is clicked
     public void onTrackingClick(View view) {
         closeFabButton();
         fab_return_tracking.setImageResource(R.drawable.ic_action_simple_marker);
@@ -131,8 +166,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         fab_return_tracking.setClickable(true);
         fab_return_tracking.setVisibility(View.VISIBLE);
         isTracking = true;
+        isFirstTime = true;
+        isntStop = true;
+        //Draw polyline
+        polylinePoints.add(marcadorDestino.getPosition());
+        drawPolyline();
     }
 
+    //If tracking using googlemaps API is clicked
     public void onTrackingGpsClick(View view) {
         closeFabButton();
         fab_return_tracking.setImageResource(R.drawable.ic_action_car_white);
@@ -141,6 +182,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         fab_return_tracking.setClickable(true);
         fab_return_tracking.setVisibility(View.VISIBLE);
         isGps = true;
+        isFirstTimeGPS = true;
     }
 
     public void onMainFabButtonClick(View view) {
@@ -153,7 +195,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     public void onReturnTrackingClick(View view) {
-        if (isGps) {
+        if (isGps) {//If tracking using googlemaps API is clicked
             addMarker();
             //String url = obtenerDireccionesURL(marcadorOrigen.getPosition(), marcadorDestino.getPosition());
             LatLng test = new LatLng(31.9005858, -116.6950596);
@@ -162,27 +204,62 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             downloadTask.execute(url);
 
             main_fab.setBackgroundColor(Color.parseColor("#DC552C"));
-            main_fab.setEnabled(true);
             fab_return_tracking.setImageResource(R.drawable.ic_action_return_tracking);
             cardView.setVisibility(View.VISIBLE);
             isGps = false;
-        } else if (isTracking) {
 
+        } else if (isTracking) { //If tracking is clicked
+            fab_return_tracking.setImageResource(R.drawable.ic_action_return_tracking);
+            isTracking = false;
+            isntStop = false;
         } else {
+            main_fab.setEnabled(true);
             mGoogleMap.clear();
             cardView.setVisibility(View.INVISIBLE);
             fab_return_tracking.setVisibility(View.INVISIBLE);
+            onMapReady(mGoogleMap);
         }
     }
 
+    public void drawPolyline() {
+        if(isFirstTime) {
+            lineOptions = new PolylineOptions();
+            lineOptions.addAll(polylinePoints);
+            lineOptions.width(10);
+            lineOptions.color(Color.rgb(220, 85, 44));
+
+            if (lineOptions != null) {
+                mGoogleMap.addPolyline(lineOptions);
+            }
+        }else{
+            LatLng origin = new LatLng(latitude, longitude);
+            lineOptions.add(origin);
+        }
+
+        addMarker();
+    }
+
     private void addMarker() {
-        marcadorOrigen = new MarkerOptions();
-        //LatLng origen = new LatLng(latitude, longitude);
-        LatLng origen = new LatLng(31.9005858, -116.6950596);
-        marcadorOrigen.position(origen);
-        marcadorOrigen.title("Aquì estoy");
-        mGoogleMap.addMarker(marcadorOrigen);
-        mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(origen, 19));
+        if ((isTracking && isFirstTime) || (isGps && isFirstTimeGPS)) {
+            marcadorOrigen = new MarkerOptions();
+            //LatLng origen = new LatLng(latitude, longitude);
+            LatLng origen = new LatLng(31.9005858, -116.6950596);
+            marcadorOrigen.position(origen);
+            marcadorOrigen.title("Aquì estoy");
+            marcadorOrigen.icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_action_person_marker));
+            mGoogleMap.addMarker(marcadorOrigen);
+            mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(origen, 19));
+
+            if (isTracking) {
+                isFirstTime = false;
+            }else if(isGps){
+                isFirstTimeGPS = false;
+            }
+        } else {
+            LatLng position = new LatLng(latitude, longitude);
+            marcadorOrigen.position(position);
+            mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(position,19));
+        }
     }
 
     public void closeFabButton() {
@@ -204,35 +281,34 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         isOpen = true;
     }
 
-    public void speak(String word){
-
+    public void speak(String phrase) {
+        tts.speak(phrase, TextToSpeech.QUEUE_FLUSH, null, null);
     }
 
+    //To create menu and menu items
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.user_menu, menu);
+        getMenuInflater().inflate(R.menu.user_menu, menu);
+
+        MenuItem switchItem = menu.findItem(R.id.app_bar_switch);
+        switchItem.setActionView(R.layout.switch_item);
+        switch_item = (Switch) menu.findItem(R.id.app_bar_switch).getActionView().findViewById(R.id.switch_item);
+        switch_item.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                if (switch_item.isChecked()) {
+                    if (isFirstTime) {
+                        if (duration != null && distance != null) {
+                            speak("Te encuentras a una distancia de " + distance + " de tu automovil. Tu duración será de  " + duration + "utos");
+                            isFirstTime = false;
+                        }
+                    }
+                } else {
+                    isFirstTime = true;
+                }
+            }
+        });
         return true;
-    }
-
-    @Override
-    public void onMapReady(GoogleMap googleMap) {
-        mGoogleMap = googleMap;
-        //LatLng myLocation = new LatLng(latitude, longitude);
-        LatLng myLocation = new LatLng(location.getLatitude(), location.getLongitude());
-
-        marcadorDestino = new MarkerOptions();
-        marcadorDestino.position(myLocation);
-        marcadorDestino.title("Aquì estoy estacionado");
-        marcadorDestino.icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_action_car_marker));
-        mGoogleMap.addMarker(marcadorDestino);
-        mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(myLocation, 19));
-    }
-
-    @Override
-    public void onLocationChanged(Location location) {
-        latitude = location.getLatitude();
-        longitude = location.getLongitude();
     }
 
     private String obtenerDireccionesURL(LatLng origin, LatLng dest) {
@@ -246,21 +322,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         return url;
     }
 
-    @Override
-    public void onStatusChanged(String s, int i, Bundle bundle) {
-
-    }
-
-    @Override
-    public void onProviderEnabled(String s) {
-
-    }
-
-    @Override
-    public void onProviderDisabled(String s) {
-
-    }
-
+    //Get JSON from webservice
     private class DownloadTask extends AsyncTask<String, Void, String> {
 
         @Override
@@ -326,6 +388,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
+    //Get polyline from JSON
     private class ParserTask extends AsyncTask<String, Integer, List<List<HashMap<String, String>>>> {
 
         @Override
@@ -368,8 +431,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 }
 
                 lineOptions.addAll(points);
-                lineOptions.width(4);
-                lineOptions.color(Color.rgb(0, 0, 255));
+                lineOptions.width(10);
+                lineOptions.color(Color.rgb(220, 85, 44));
             }
             if (lineOptions != null) {
                 mGoogleMap.addPolyline(lineOptions);
@@ -377,6 +440,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
+    //Get distance and duration from JSON
     private class ParserTaskDirections extends AsyncTask<String, Integer, HashMap<String, String>> {
 
         @Override
@@ -398,13 +462,57 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         @Override
         protected void onPostExecute(HashMap<String, String> result) {
-            String duration, distance;
 
             duration = result.get("duration");
             distance = result.get("distance");
 
             txt_duration.setText(duration);
             txt_distance.setText("(" + distance + ")");
+
         }
+
+    }
+
+    //OnLocationChanged every 5 sec and 1 m
+    @Override
+    public void onLocationChanged(Location location) {
+        latitude = location.getLatitude();
+        longitude = location.getLongitude();
+        if (isGps) {
+
+            //addMarker();
+
+            if (switch_item.isChecked()) {
+                if (isFirstTime) {
+                    if (duration != null && distance != null) {
+                        speak("Te encuentras a una distancia de " + distance + " de tu automovil. Tu duración será de  " + duration + "utos");
+                        isFirstTime = false;
+                    }
+                }
+            } else {
+                isFirstTime = true;
+            }
+        } else if (isTracking) {
+            if(isntStop) {
+                LatLng origin = new LatLng(latitude, longitude);
+                drawPolyline();
+            }
+        }
+    }
+
+    //Not in use
+    @Override
+    public void onStatusChanged(String s, int i, Bundle bundle) {
+
+    }
+
+    @Override
+    public void onProviderEnabled(String s) {
+
+    }
+
+    @Override
+    public void onProviderDisabled(String s) {
+
     }
 }
