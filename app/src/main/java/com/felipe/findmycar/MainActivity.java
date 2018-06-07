@@ -197,9 +197,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onReturnTrackingClick(View view) {
         if (isGps) {//If tracking using googlemaps API is clicked
             addMarker();
-            //String url = obtenerDireccionesURL(marcadorOrigen.getPosition(), marcadorDestino.getPosition());
-            LatLng test = new LatLng(31.9005858, -116.6950596);
-            String url = obtenerDireccionesURL(test, marcadorDestino.getPosition());
+            String url = obtenerDireccionesURL(marcadorOrigen.getPosition(), marcadorDestino.getPosition());
+            //LatLng test = new LatLng(31.9005858, -116.6950596); TEST
+            //String url = obtenerDireccionesURL(test, marcadorDestino.getPosition()); TEST
             DownloadTask downloadTask = new DownloadTask();
             downloadTask.execute(url);
 
@@ -242,8 +242,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private void addMarker() {
         if ((isTracking && isFirstTime) || (isGps && isFirstTimeGPS)) {
             marcadorOrigen = new MarkerOptions();
-            //LatLng origen = new LatLng(latitude, longitude);
-            LatLng origen = new LatLng(31.9005858, -116.6950596);
+            LatLng origen = new LatLng(latitude, longitude);
+            //LatLng origen = new LatLng(31.9005858, -116.6950596); TEST
             marcadorOrigen.position(origen);
             marcadorOrigen.title("Aquì estoy");
             marcadorOrigen.icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_action_person_marker));
@@ -479,8 +479,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         latitude = location.getLatitude();
         longitude = location.getLongitude();
         if (isGps) {
-
-            //addMarker();
+            addMarker();
 
             if (switch_item.isChecked()) {
                 if (isFirstTime) {
@@ -494,7 +493,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         } else if (isTracking) {
             if(isntStop) {
-                LatLng origin = new LatLng(latitude, longitude);
                 drawPolyline();
             }
         }
