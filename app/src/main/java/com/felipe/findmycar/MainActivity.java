@@ -233,13 +233,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onLocationChanged(Location location) {
         latitude = location.getLatitude();
         longitude = location.getLongitude();
-        LatLng ubicacion = new LatLng(latitude,longitude);
-        MarkerOptions mark =new MarkerOptions();
-        mark.position(ubicacion);
-        mark.icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_action_simple_marker));
-        mGoogleMap.addMarker(mark);
-        mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(ubicacion, 19));
-
     }
 
     private String obtenerDireccionesURL(LatLng origin, LatLng dest) {
