@@ -10,11 +10,13 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.speech.tts.TextToSpeech;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
@@ -23,6 +25,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.widget.TextView;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -47,14 +50,19 @@ import java.util.HashMap;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, LocationListener {
-    FloatingActionButton main_fab, fab_tracking, fab_gps, fab_return_tracking;
-    Animation FabOpen, FabClose, FabRClockwise, FabRAnticlockwise;
-    Boolean isOpen = false;
+    public FloatingActionButton main_fab, fab_tracking, fab_gps, fab_return_tracking;
+    public TextView txt_distance, txt_duration;
+    public CardView cardView;
+    public Animation FabOpen, FabClose, FabRClockwise, FabRAnticlockwise;
+    public Boolean isOpen = false;
+    public Boolean isGps = false;
+    public Boolean isTracking = false;
+    public TextToSpeech tts;
     //Maps
-    GoogleMap mGoogleMap;
+    private GoogleMap mGoogleMap;
     private double latitude;
     private double longitude;
-    MarkerOptions marcadorDestino, marcadorOrigen;
+    public MarkerOptions marcadorDestino, marcadorOrigen;
     //GPS
     protected Context context;
     protected LocationManager locationManager;
@@ -73,7 +81,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
+        //CardView
+        cardView = (CardView) findViewById(R.id.cardView);
+        //TextViews
+        txt_distance = (TextView) findViewById(R.id.txt_distance);
+        txt_duration = (TextView) findViewById(R.id.txt_duration);
         //Fab buttons
         fab_return_tracking = (FloatingActionButton) findViewById(R.id.fab_return);
         fab_tracking = (FloatingActionButton) findViewById(R.id.fab_tracking);
@@ -113,20 +125,22 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     public void onTrackingClick(View view) {
         closeFabButton();
-        fab_return_tracking.setImageResource(R.drawable.ic_action_return_tracking);
+        fab_return_tracking.setImageResource(R.drawable.ic_action_simple_marker);
         main_fab.setBackgroundColor(Color.parseColor("#343434"));
         main_fab.setEnabled(false);
         fab_return_tracking.setClickable(true);
         fab_return_tracking.setVisibility(View.VISIBLE);
+        isTracking = true;
     }
 
     public void onTrackingGpsClick(View view) {
         closeFabButton();
-        fab_return_tracking.setImageResource(R.drawable.ic_action_return_tracking_gps);
+        fab_return_tracking.setImageResource(R.drawable.ic_action_car_white);
         main_fab.setBackgroundColor(Color.parseColor("#343434"));
         main_fab.setEnabled(false);
         fab_return_tracking.setClickable(true);
         fab_return_tracking.setVisibility(View.VISIBLE);
+        isGps = true;
     }
 
     public void onMainFabButtonClick(View view) {
@@ -139,16 +153,26 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     public void onReturnTrackingClick(View view) {
-        addMarker();
-        //String url = obtenerDireccionesURL(marcadorOrigen.getPosition(), marcadorDestino.getPosition());
-        LatLng test = new LatLng(31.9005858, -116.6950596);
-        String url = obtenerDireccionesURL(test, marcadorDestino.getPosition());
-        DownloadTask downloadTask = new DownloadTask();
-        downloadTask.execute(url);
+        if (isGps) {
+            addMarker();
+            //String url = obtenerDireccionesURL(marcadorOrigen.getPosition(), marcadorDestino.getPosition());
+            LatLng test = new LatLng(31.9005858, -116.6950596);
+            String url = obtenerDireccionesURL(test, marcadorDestino.getPosition());
+            DownloadTask downloadTask = new DownloadTask();
+            downloadTask.execute(url);
 
-        main_fab.setBackgroundColor(Color.parseColor("#DC552C"));
-        main_fab.setEnabled(true);
-        fab_return_tracking.setVisibility(View.INVISIBLE);
+            main_fab.setBackgroundColor(Color.parseColor("#DC552C"));
+            main_fab.setEnabled(true);
+            fab_return_tracking.setImageResource(R.drawable.ic_action_return_tracking);
+            cardView.setVisibility(View.VISIBLE);
+            isGps = false;
+        } else if (isTracking) {
+
+        } else {
+            mGoogleMap.clear();
+            cardView.setVisibility(View.INVISIBLE);
+            fab_return_tracking.setVisibility(View.INVISIBLE);
+        }
     }
 
     private void addMarker() {
@@ -178,6 +202,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         fab_gps.setClickable(true);
         fab_tracking.setClickable(true);
         isOpen = true;
+    }
+
+    public void speak(String word){
+
     }
 
     @Override
@@ -214,7 +242,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         String parameters = str_origin + "&" + str_dest + "&" + sensor;
         String output = "json";
         String url = "https://maps.googleapis.com/maps/api/directions/" + output + "?" + parameters;
-        Log.e("URL",""+url);
+        Log.e("URL", "" + url);
         return url;
     }
 
@@ -253,8 +281,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             super.onPostExecute(result);
 
             ParserTask parserTask = new ParserTask();
-
             parserTask.execute(result);
+
+            ParserTaskDirections parserTaskDirections = new ParserTaskDirections();
+            parserTaskDirections.execute(result);
         }
 
         private String downloadUrl(String strUrl) throws IOException {
@@ -344,6 +374,37 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             if (lineOptions != null) {
                 mGoogleMap.addPolyline(lineOptions);
             }
+        }
+    }
+
+    private class ParserTaskDirections extends AsyncTask<String, Integer, HashMap<String, String>> {
+
+        @Override
+        protected HashMap<String, String> doInBackground(String... jsonData) {
+
+            JSONObject jObject;
+            HashMap<String, String> directionsList = null;
+
+            try {
+                jObject = new JSONObject(jsonData[0]);
+                DirectionsJSONParser parser = new DirectionsJSONParser();
+
+                directionsList = parser.getDuration(jObject);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return directionsList;
+        }
+
+        @Override
+        protected void onPostExecute(HashMap<String, String> result) {
+            String duration, distance;
+
+            duration = result.get("duration");
+            distance = result.get("distance");
+
+            txt_duration.setText(duration);
+            txt_distance.setText("(" + distance + ")");
         }
     }
 }

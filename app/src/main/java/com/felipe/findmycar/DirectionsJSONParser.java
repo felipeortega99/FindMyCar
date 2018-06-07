@@ -1,5 +1,7 @@
 package com.felipe.findmycar;
 
+import android.util.Log;
+
 import com.google.android.gms.maps.model.LatLng;
 
 import org.json.JSONArray;
@@ -52,6 +54,31 @@ public class DirectionsJSONParser {
         }
 
         return routes;
+    }
+
+    public HashMap<String, String> getDuration(JSONObject jObject) {
+        String duration = "";
+        String distance = "";
+        HashMap<String, String> googleDirectionsMap = new HashMap<String, String>();
+        JSONArray jDuration = null;
+
+        Log.d("json response",jObject.toString());
+
+        try{
+            jDuration = jObject.getJSONArray("routes");
+
+            duration = jDuration.getJSONObject(0).getJSONArray("legs").getJSONObject(0).getJSONObject("duration").getString("text");
+            distance = jDuration.getJSONObject(0).getJSONArray("legs").getJSONObject(0).getJSONObject("distance").getString("text");
+
+            googleDirectionsMap.put("duration",duration);
+            googleDirectionsMap.put("distance",distance);
+
+        } catch(JSONException e){
+            e.printStackTrace();
+        } catch (Exception e){
+        }
+
+        return googleDirectionsMap;
     }
 
     private List<LatLng> decodePoly(String encoded) {

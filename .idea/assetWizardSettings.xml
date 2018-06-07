@@ -19,8 +19,9 @@
                                   <option name="values">
                                     <map>
                                       <entry key="assetType" value="IMAGE" />
-                                      <entry key="imageAsset" value="C:\Users\sk8fo_000\Downloads\2x\baseline_more_vert_black_18dp.png" />
-                                      <entry key="outputName" value="ic_action_dots" />
+                                      <entry key="imageAsset" value="C:\Users\sk8fo_000\Downloads\2x\baseline_directions_car_white_18dp.png" />
+                                      <entry key="outputName" value="ic_action_car_white" />
+                                      <entry key="theme" value="HOLO_DARK" />
                                     </map>
                                   </option>
                                 </PersistentState>
